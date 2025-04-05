@@ -1,3 +1,17 @@
 server:
   port: 8080
 
+logging:
+  level:
+    root: info
+    com.example: debug
+
+app:
+  rates:
+    cacheSec: 60
+    scale: 8 #fractional part size
+
+freeCurrency:
+  url: https://api.freecurrencyapi.com/v1
+  apiKey: fca_live_kIjHBKuP3DTIczdM0QN14oFcA0sBXeE3p9luExeQ  #should be provided via env variable
+  readTimeoutMs: 3000 #must be > 1sec
