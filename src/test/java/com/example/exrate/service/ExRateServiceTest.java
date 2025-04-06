@@ -3,10 +3,12 @@ package com.example.exrate.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.example.exrate.data.rest.ExRateConversionsResponse;
 import com.example.exrate.data.rest.ExRateRatesResponse;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +43,27 @@ public class ExRateServiceTest {
     mockRates.put("JPY", BigDecimal.valueOf(146.0));
 
     when(provider.getCurrencyRates()).thenReturn(mockRates);
+  }
+
+  @Test
+  void convert_EurTo3Currencies_ConvertedOk() {
+    List<String> toCurrencies = List.of("USD", "GBP", "JPY");
+    BigDecimal amount = BigDecimal.valueOf(123);
+
+    ExRateConversionsResponse result = exRateService.convert(EUR, toCurrencies, amount);
+
+    assertThat(result).isNotNull();
+    assertThat(result.getFrom()).isEqualTo(EUR);
+    assertThat(result.getAmount()).isEqualTo(amount);
+
+    Map<String, BigDecimal> conversions = result.getConversions();
+    assertThat(conversions).hasSize(3);
+    assertThat(conversions.get(USD)).isEqualByComparingTo(new BigDecimal("1.0").multiply(amount)
+        .divide(mockRates.get(EUR), scale, RoundingMode.HALF_UP));
+    assertThat(conversions.get("GBP")).isEqualByComparingTo(mockRates.get("GBP").multiply(amount)
+        .divide(mockRates.get(EUR), scale, RoundingMode.HALF_UP));
+    assertThat(conversions.get("JPY")).isEqualByComparingTo(mockRates.get("JPY").multiply(amount)
+        .divide(mockRates.get(EUR), scale, RoundingMode.HALF_UP));
   }
 
   @Test
