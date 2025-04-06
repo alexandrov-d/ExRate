@@ -1,9 +1,11 @@
 package com.example.exrate.service;
 
+import com.example.exrate.data.rest.ExRateConversionsResponse;
 import com.example.exrate.data.rest.ExRateRatesResponse;
 import jakarta.annotation.Nullable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -22,6 +24,31 @@ public class ExRateService {
   private int scale;
 
   private final FreeCurrencyProvider currencyProvider;
+
+  public Set<String> getAvailableCurrencies() {
+    return currencyProvider.getCurrencyRates().keySet();
+  }
+
+  /**
+   * Converts a specified amount from a source currency into one or more target currencies.
+   *
+   * @param from         currency of 'amount'
+   * @param toCurrencies a list of currencies to convert
+   * @param amount       amount to convert
+   */
+  public ExRateConversionsResponse convert(String from, List<String> toCurrencies, BigDecimal amount) {
+    Map<String, BigDecimal> rates = currencyProvider.getCurrencyRates();
+    ExRateConversionsResponse conversionResult = new ExRateConversionsResponse();
+    conversionResult.setFrom(from)
+        .setAmount(amount);
+    BigDecimal currencyRate = rates.get(from);
+    for (String currency : toCurrencies) {
+      BigDecimal convertedAmount = amount.multiply(rates.get(currency))
+          .divide(currencyRate, scale, RoundingMode.HALF_UP);
+      conversionResult.getConversions().put(currency, convertedAmount);
+    }
+    return conversionResult;
+  }
 
   /**
    * Get exchange rate relative to a given currency {@code from}
